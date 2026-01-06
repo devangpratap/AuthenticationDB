@@ -6,61 +6,81 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("1) Register");
-        System.out.println("2) Login");
-        System.out.println("3) Who am I");
-        System.out.print("> ");
-        String choice = sc.nextLine().trim();
+        while (true) {
 
-        if (choice.equals("1")) {
-            System.out.print("Email: ");
-            String email = sc.nextLine().trim();
+            SessionService.cleanupExpiredSessions();
 
-            System.out.print("Password: ");
-            String password = sc.nextLine();
+            System.out.println("0) Exit");
+            System.out.println("1) Register");
+            System.out.println("2) Login");
+            System.out.println("3) Who am I");
+            System.out.println("4) Logout");
+            System.out.print("> ");
+            String choice = sc.nextLine().trim();
 
-            String passwordHash = AuthService.hashPassword(password);
-            UserService.createUser(email, passwordHash);
+            switch (choice) {
+                case "0" -> {
+                    break;
+                }
+                case "1" -> {
+                    System.out.print("Email: ");
+                    String email = sc.nextLine().trim();
 
-            System.out.println("✅ User registered.");
+                    System.out.print("Password: ");
+                    String password = sc.nextLine();
 
-        } else if (choice.equals("2")) {
-            System.out.print("Email: ");
-            String email = sc.nextLine().trim();
+                    String passwordHash = AuthService.hashPassword(password);
+                    UserService.createUser(email, passwordHash);
 
-            System.out.print("Password: ");
-            String password = sc.nextLine();
+                    System.out.println("✅ User registered.");
 
-            UserAuthRow row = UserService.findAuthByEmail(email);
+                }
+                case "2" -> {
+                    System.out.print("Email: ");
+                    String email = sc.nextLine().trim();
 
-            if (row == null) {
-                System.out.println("❌ No such user.");
-            } else if (!AuthService.checkPassword(password, row.passwordHash)) {
-                System.out.println("❌ Wrong password.");
-            } else {
-                String token = SessionService.createSession(row.id);
-                System.out.println("✅ Login successful.");
-                System.out.println("Session token:");
-                System.out.println(token);
-                System.out.println("Session valid for 7 days.");
+                    System.out.print("Password: ");
+                    String password = sc.nextLine();
+
+                    UserAuthRow row = UserService.findAuthByEmail(email);
+
+                    if (row == null) {
+                        System.out.println("❌ No such user.");
+                    } else if (!AuthService.checkPassword(password, row.passwordHash)) {
+                        System.out.println("❌ Wrong password.");
+                    } else {
+                        String token = SessionService.createSession(row.id);
+                        System.out.println("✅ Login successful.");
+                        System.out.println("Session token:");
+                        System.out.println(token);
+                        System.out.println("Session valid for 7 days.");
+                    }
+
+                }
+                case "3" -> {
+                    System.out.print("Session token: ");
+                    String token = sc.nextLine().trim();
+
+                    String email = SessionService.getEmailFromToken(token);
+
+                    if (email == null) {
+                        System.out.println("❌ Invalid or expired session.");
+                    } else {
+                        System.out.println("✅ Logged in as: " + email);
+                    }
+                }
+                case "4" -> {
+                    System.out.print("Session token: ");
+                    String token = sc.nextLine().trim();
+
+                    SessionService.logout(token);
+                    System.out.println("✅ Logged out (if token existed).");
+
+                }
+                default -> System.out.println("❌ Invalid choice.");
             }
 
-        } else if (choice.equals("3")) {
-            System.out.print("Session token: ");
-            String token = sc.nextLine().trim();
-
-            String email = SessionService.getEmailFromToken(token);
-
-            if (email == null) {
-                System.out.println("❌ Invalid or expired session.");
-            } else {
-                System.out.println("✅ Logged in as: " + email);
-            }
-
-        } else {
-            System.out.println("❌ Invalid choice.");
+            sc.close();
         }
-
-        sc.close();
     }
 }

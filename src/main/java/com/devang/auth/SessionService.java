@@ -46,4 +46,22 @@ public class SessionService {
             }
         }
     }
+    public static void logout(String token) throws Exception {
+        String sql = "DELETE FROM sessions WHERE token = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, token);
+            ps.executeUpdate();
+        }
+    }
+    public static void cleanupExpiredSessions() throws Exception {
+        String sql = "DELETE FROM sessions WHERE expires_at < NOW()";
+
+        try (var conn = Database.getConnection();
+             var ps = conn.prepareStatement(sql)) {
+            ps.executeUpdate();
+        }
+    }
 }
